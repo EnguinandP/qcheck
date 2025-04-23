@@ -391,6 +391,12 @@ let print_error ~colors out cell c_ex exn bt =
     bt;
   print_messages ~colors out cell c_ex.QCheck2.TestResult.msg_l
 
+  let std_printer : (out_channel, unit)  Raw.printer = {
+    info = (fun fmt -> Printf.kfprintf (fun oc -> output_char oc '\n'; flush oc) stdout fmt);
+    fail = (fun fmt -> Printf.kfprintf (fun oc -> output_char oc '\n'; flush oc) stdout fmt);
+    err  = (fun fmt -> Printf.kfprintf (fun oc -> output_char oc '\n'; flush oc) stderr fmt);
+  }
+
 let run_tests
     ?(handler=default_handler)
     ?(colors=true) ?(verbose=verbose()) ?(long=long_tests())
@@ -423,7 +429,8 @@ let run_tests
         ~handler:(handler ~colors ~debug_shrink ~debug_shrink_list
                     ~size ~out ~verbose c).handler
         ~step:(step ~colors ~size ~out ~verbose c)
-        ~call:(callback ~size ~out ~verbose ~colors c)
+        ~call:(Raw.callback ~colors ~verbose ~print_res:true ~print:std_printer)
+        (* ~call:(callback ~size ~out ~verbose ~colors c) *)
         cell
     in
     Res (cell, r)
